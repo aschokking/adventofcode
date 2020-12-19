@@ -1,34 +1,31 @@
 use itertools::Itertools;
 use std::fs;
 
-fn main() {
-    println!("Hello, world!");
-
+fn day1(window_size: usize) {
     let contents =
         fs::read_to_string("../inputs/day1.txt").expect("Something went wrong reading the file");
 
     let lines = contents.lines();
 
-    let numbers = lines.map(|line| line.parse::<i32>().unwrap());
+    let numbers = lines.filter_map(|line| line.parse::<u32>().ok());
 
-    let combos = numbers.combinations(3);
-
-    for i in 0..numbers.len() {
-        for j in 0..numbers.len() {
-            let number1 = numbers.get(i);
-            let number2 = numbers.get(j);
-
-            if number1.is_some() && number2.is_some() {
-                if number1.unwrap() + number2.unwrap() == 2020 {
-                    println!(
-                        "Found numbers {} and {}",
-                        number1.unwrap(),
-                        number2.unwrap()
-                    );
-                    println!("Answer is {}", number1.unwrap() * number2.unwrap());
-                    return;
-                }
-            }
+    for combo in numbers.combinations(window_size) {
+        if combo.iter().sum::<u32>() == 2020 {
+            println!("Bingo! {}", combo.iter().product::<u32>());
+            break;
         }
     }
+}
+
+fn day1_1() {
+    day1(2)
+}
+
+fn day1_2() {
+    day1(3)
+}
+
+fn main() {
+    day1_1();
+    day1_2();
 }
