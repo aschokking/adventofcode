@@ -11,8 +11,8 @@ def isValid1(str: String): Boolean = {
 }
 
 def isValid2(str: String): Boolean = {
-    // see if there's a group of size exactly 2
-  pairRegex.findAllIn(str).map(_.size).filter(_ ==2).nonEmpty
+  // see if there's a group of size exactly 2
+  pairRegex.findAllIn(str).map(_.size).filter(_ == 2).nonEmpty
 }
 
 val valid1 = (range._1 to range._2).map(_.toString).filter(isValid1)
