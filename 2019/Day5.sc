@@ -10,7 +10,7 @@ import scala.io.StdIn.readLine
 import enumeratum.values._
 import scala.annotation.meta.param
 
-val STATIC_INPUT = Some(1)
+val STATIC_INPUT = Some(5)
 
 sealed abstract class OpCode(val value: Int, val length: Int)
     extends IntEnumEntry
@@ -20,6 +20,10 @@ object OpCode extends IntEnum[OpCode] {
   case object Mult extends OpCode(2, 4)
   case object Input extends OpCode(3, 2)
   case object Output extends OpCode(4, 2)
+  case object JumpIfTrue extends OpCode(5, 3)
+  case object JumpIfFalse extends OpCode(6, 3)
+  case object LessThan extends OpCode(7, 4)
+  case object Equals extends OpCode(8, 4)
 
   val values = findValues // required for enums
 }
@@ -63,41 +67,78 @@ def parseInstruction(values: List[Int]): Instruction = {
   )
 }
 
-def groupOps(input: ListBuffer[Int]): Iterator[Instruction] = {
-  var position = 0
-  Iterator
-    .continually {
-      // parse next instruction and advance the position pointer the right number of spots
-      val instruction =
-        parseInstruction(input.slice(position, position + 4).toList)
-      position = position + instruction.opCode.length
-      instruction
-    }
-    .takeWhile(_.opCode != Halt && position <= input.size)
-}
-
-def runInstruction(instruction: Instruction, memory: ListBuffer[Int]): Unit = {
+def runInstruction(
+    instruction: Instruction,
+    memory: ListBuffer[Int]
+): Option[Int] = {
   val paramValues = instruction.parameterValues(memory)
   instruction.opCode match {
     case Add => {
       memory(instruction.parameters(2)) = paramValues(0) + paramValues(1)
+      None
     }
     case Mult => {
       memory(instruction.parameters(2)) = paramValues(0) * paramValues(1)
+      None
     }
     case Input => {
       memory(instruction.parameters(0)) =
         STATIC_INPUT.getOrElse(readLine("Input? ").toInt)
+      None
     }
     case Output => {
       println(s"Output: ${paramValues(0)}")
+      None
+    }
+    case Halt => {
+      Some(-1) // jumping to -1 will halt program
+    }
+    case JumpIfTrue => {
+      if (paramValues(0) > 0) {
+        Some(paramValues(1))
+      } else {
+        None
+      }
+    }
+    case JumpIfFalse => {
+      if (paramValues(0) == 0) {
+        Some(paramValues(1))
+      } else {
+        None
+      }
+    }
+    case LessThan => {
+      memory(instruction.parameters(2)) = if (paramValues(0) < paramValues(1)) {
+        1
+      } else {
+        0
+      }
+      None
+    }
+    case Equals => {
+      memory(instruction.parameters(2)) =
+        if (paramValues(0) == paramValues(1)) {
+          1
+        } else {
+          0
+        }
+      None
     }
   }
 }
 
 def runProgram(rawInput: String): ListBuffer[Int] = {
+  //println("Starting program")
   val memory = parseInput(rawInput)
-  groupOps(memory).foreach(runInstruction(_, memory))
+  var position = 0
+  do {
+    // parse next instruction
+    val instruction =
+      parseInstruction(memory.slice(position, position + 4).toList)
+    //println(s"Running ${instruction}")
+    val maybeJump = runInstruction(instruction, memory)
+    position = maybeJump.getOrElse(position + instruction.opCode.length)
+  } while (position >= 0 && position < memory.size)
   memory
 }
 
