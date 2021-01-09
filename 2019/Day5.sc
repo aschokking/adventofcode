@@ -1,12 +1,16 @@
 import $ivy.`com.beachape::enumeratum:1.6.1`
 import $ivy.`org.scalatest::scalatest:3.2.2`
+import $file.Util
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
 import scala.collection.mutable.ListBuffer
+import scala.io.StdIn.readLine
 import enumeratum.values._
 import scala.annotation.meta.param
+
+val STATIC_INPUT = Some(1)
 
 sealed abstract class OpCode(val value: Int, val length: Int)
     extends IntEnumEntry
@@ -41,8 +45,8 @@ case class Instruction(
     parameters: List[Int]
 ) {
   def parameterValues(memory: ListBuffer[Int]): List[Int] = {
-    parameters.map { parameter =>
-      parameterValue(parameter, paramModes.get(parameter).getOrElse(0), memory)
+    parameters.zipWithIndex.map { case (parameter, i) =>
+      parameterValue(parameter, paramModes.get(i).getOrElse(0), memory)
     }
   }
 }
@@ -52,7 +56,7 @@ def parseInstruction(values: List[Int]): Instruction = {
   val opCode = OpCode.withValue(instructionCode % 100)
   Instruction(
     opCode = opCode,
-    paramModes = (0 to 3).map { position =>
+    paramModes = (0 to 2).map { position =>
       position -> instructionCode / math.pow(10, position + 2).toInt % 10
     }.toMap,
     parameters = values.slice(1, opCode.length)
@@ -81,6 +85,13 @@ def runInstruction(instruction: Instruction, memory: ListBuffer[Int]): Unit = {
     case Mult => {
       memory(instruction.parameters(2)) = paramValues(0) * paramValues(1)
     }
+    case Input => {
+      memory(instruction.parameters(0)) =
+        STATIC_INPUT.getOrElse(readLine("Input? ").toInt)
+    }
+    case Output => {
+      println(s"Output: ${paramValues(0)}")
+    }
   }
 }
 
@@ -107,6 +118,24 @@ class Spec extends AnyFlatSpec {
       }
     }
   }
+
+  "parameterValue" should "mode 0 return memory address value" in {
+    parameterValue(0, 0, ListBuffer(10, 20, 30, 40)) should be(10)
+  }
+
+  it should "mode 1 return the actual value directly" in {
+    parameterValue(-10, 1, ListBuffer(10, 20, 30, 40)) should be(-10)
+  }
+
+  "Instruction.parameterValues()" should "respect paramModes" in {
+    val i = Instruction(Add, Map(0 -> 1, 1 -> 0, 2 -> 0), List(-1, 0, 1))
+    i.parameterValues(ListBuffer(1, 2, 3, 4)) should be(List(-1, 1, 2))
+  }
 }
 
 (new Spec()).execute()
+
+//// run actual program
+
+val rawInput = Util.inputForDay(5).head
+runProgram(rawInput)
