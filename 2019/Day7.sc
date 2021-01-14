@@ -128,6 +128,51 @@ def runInstruction(
   }
 }
 
+def runProgram(
+    rawInput: String,
+    inputBuffer: Queue[Int] = Queue.empty,
+    outputBuffer: Queue[Int] = Queue.empty
+): ListBuffer[Int] = {
+  // println(s"Starting program ${inputBuffer}")
+  val memory = parseInput(rawInput)
+  var position = 0
+  do {
+    // parse next instruction
+    val instruction =
+      parseInstruction(memory.slice(position, position + 4).toList)
+    // println(s"Running ${instruction}")
+    val maybeJump =
+      runInstruction(instruction, memory, inputBuffer, outputBuffer)
+    position = maybeJump.getOrElse(position + instruction.opCode.length)
+  } while (position >= 0 && position < memory.size)
+  memory
+}
+
+// day 7 part 1 specific stuff
+
+def getOutputThrust(program: String, phaseSeq: Seq[Int]): Int = {
+  //println(s"getOutputThrust ${phaseSeq}")
+  phaseSeq.foldLeft(0)((previousOutput, currentPhase) => {
+    val outputQueue = Queue[Int]()
+    runProgram(
+      program,
+      inputBuffer = Queue(currentPhase, previousOutput),
+      outputBuffer = outputQueue
+    )
+    outputQueue.dequeue()
+  })
+}
+
+def part1(): Int = {
+  (0 to 4).permutations.map { phases =>
+    {
+      getOutputThrust(rawInput, phases)
+    }
+  }.max
+}
+
+// day 7 part 2
+
 class Program(
     val instructions: String,
     var inputBuffer: Queue[Int] = Queue.empty,
@@ -159,41 +204,6 @@ class Program(
   }
 }
 
-def runProgram(
-    rawInput: String,
-    inputBuffer: Queue[Int] = Queue.empty,
-    outputBuffer: Queue[Int] = Queue.empty
-): ListBuffer[Int] = {
-  // println(s"Starting program ${inputBuffer}")
-  val memory = parseInput(rawInput)
-  var position = 0
-  do {
-    // parse next instruction
-    val instruction =
-      parseInstruction(memory.slice(position, position + 4).toList)
-    // println(s"Running ${instruction}")
-    val maybeJump =
-      runInstruction(instruction, memory, inputBuffer, outputBuffer)
-    position = maybeJump.getOrElse(position + instruction.opCode.length)
-  } while (position >= 0 && position < memory.size)
-  memory
-}
-
-// day 7 specific stuff
-
-def getOutputThrust(program: String, phaseSeq: Seq[Int]): Int = {
-  //println(s"getOutputThrust ${phaseSeq}")
-  phaseSeq.foldLeft(0)((previousOutput, currentPhase) => {
-    val outputQueue = Queue[Int]()
-    runProgram(
-      program,
-      inputBuffer = Queue(currentPhase, previousOutput),
-      outputBuffer = outputQueue
-    )
-    outputQueue.dequeue()
-  })
-}
-
 def getOutputThrust2(program: String, phaseSeq: Seq[Int]): Int = {
   //println(s"getOutputThrust ${phaseSeq}")
   val programs = phaseSeq.map(phase => {
@@ -213,14 +223,6 @@ def getOutputThrust2(program: String, phaseSeq: Seq[Int]): Int = {
     }
   }
   programs(0).inputBuffer.dequeue()
-}
-
-def part1(): Int = {
-  (0 to 4).permutations.map { phases =>
-    {
-      getOutputThrust(rawInput, phases)
-    }
-  }.max
 }
 
 def part2(): Int = {
