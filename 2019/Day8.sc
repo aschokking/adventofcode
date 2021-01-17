@@ -2,20 +2,22 @@ import $file.Util
 
 val rawInput = Util.inputForDay(8).head
 
-def part1(rawInput: String, layerSize: Int = 25 * 6): Int = {
-  val targetLayer = rawInput
-    .grouped(layerSize)
-    .map(_.toString)
-    .toList
+val WIDTH = 25
+val HEIGHT = 6
+val LAYER_SIZE = WIDTH * HEIGHT
+val layers = rawInput
+  .grouped(LAYER_SIZE)
+  .toList
+
+def part1(): Int = {
+  val targetLayer = layers
     .sortBy(layer => "0".r.findAllIn(layer).size)
     .head
 
   "1".r.findAllIn(targetLayer).size * "2".r.findAllIn(targetLayer).size
 }
 
-def part2(rawInput: String, width: Int = 25, height: Int = 6): Unit = {
-  val layerSize = width * height
-  val layers = rawInput.grouped(layerSize).toList
+def part2(): Unit = {
   // resolve each pixel one at a time, top down
   val pixelLists = layers.transpose
   val resolvedPixels = pixelLists.map(pixelList => {
@@ -29,10 +31,10 @@ def part2(rawInput: String, width: Int = 25, height: Int = 6): Unit = {
 
   // print resolved pixels
   resolvedPixels
-    .grouped(width)
+    .grouped(WIDTH)
     .foreach(row => println(row.mkString("").replace("0", " ")))
 
 }
 
-println(part1(rawInput))
-part2(rawInput)
+println(part1())
+part2()
