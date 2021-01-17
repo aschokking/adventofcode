@@ -143,7 +143,7 @@ def runInstruction(
       None
     }
     case Output => {
-      println(s"Outputting ${paramValues(0)}")
+      //println(s"Outputting ${paramValues(0)}")
       outputBuffer += paramValues(0)
       None
     }
@@ -187,7 +187,7 @@ def runInstruction(
       None
     }
     case SetBase => {
-      relativeBase(0) = paramValues(0).toInt
+      relativeBase(0) = relativeBase(0) + paramValues(0).toInt
       None
     }
   }
@@ -206,9 +206,9 @@ def runProgram(
     // parse next instruction
     val instruction =
       parseInstruction(position, memory)
-    println(
-      s"Running ${instruction} || base ${relativeBase.head} || ${memory.memory}"
-    )
+    // println(
+    //   s"Running ${instruction} || base ${relativeBase.head} || ${memory.memory}"
+    // )
     val maybeJump =
       runInstruction(
         instruction,
