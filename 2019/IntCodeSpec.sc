@@ -42,18 +42,18 @@ class Spec extends AnyFlatSpec {
   "Instruction.parameterValues()" should "respect paramModes" in {
     val i = Instruction(
       OpCode.Add,
-      Map(
+      paramModes = Map(
         0 -> ParamMode.Direct,
         1 -> ParamMode.MemAddr,
         2 -> ParamMode.MemAddr
       ),
-      List(-1, 0, 1)
+      parameters = List(-1, 0, 1)
     )
     val memory = new Memory()
     memory.write(0, 1)
     memory.write(1, 2)
     memory.write(2, 3)
-    i.parameterValues(memory, 0) should be(List(-1, 1, 2))
+    i.parameterValues(memory, 0) should be(List(-1, 1, 1))
   }
 
   "day 9 test case 1" should "make a copy of itself as output" in {

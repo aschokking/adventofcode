@@ -10,18 +10,21 @@ import enumeratum.values._
 import scala.annotation.meta.param
 import os.FileType.Dir
 
-sealed abstract class OpCode(val value: Int, val length: Int)
-    extends IntEnumEntry
+sealed abstract class OpCode(
+    val value: Int,
+    val length: Int,
+    val outputParams: Int = 0
+) extends IntEnumEntry
 object OpCode extends IntEnum[OpCode] {
   case object Halt extends OpCode(99, 1)
-  case object Add extends OpCode(1, 4)
-  case object Mult extends OpCode(2, 4)
-  case object Input extends OpCode(3, 2)
+  case object Add extends OpCode(1, 4, 1)
+  case object Mult extends OpCode(2, 4, 1)
+  case object Input extends OpCode(3, 2, 1)
   case object Output extends OpCode(4, 2)
   case object JumpIfTrue extends OpCode(5, 3)
   case object JumpIfFalse extends OpCode(6, 3)
-  case object LessThan extends OpCode(7, 4)
-  case object Equals extends OpCode(8, 4)
+  case object LessThan extends OpCode(7, 4, 1)
+  case object Equals extends OpCode(8, 4, 1)
   case object SetBase extends OpCode(9, 2)
 
   val values = findValues // required for enums
@@ -65,12 +68,20 @@ def parameterValue(
     parameter: BigInt,
     parameterMode: ParamMode,
     memory: Memory,
+    isOutputAddress: Boolean = false,
     relativeBase: Int = 0
 ): BigInt = {
-  parameterMode match {
-    case MemAddr    => memory.read(parameter.toInt) // read address
-    case Direct     => parameter // immediate mode, use value directly
-    case RelMemAddr => memory.read((relativeBase + parameter.toInt))
+  if (isOutputAddress) {
+    parameterMode match {
+      case MemAddr    => parameter.toInt // read address
+      case RelMemAddr => (relativeBase + parameter.toInt)
+    }
+  } else {
+    parameterMode match {
+      case MemAddr    => memory.read(parameter.toInt) // read address
+      case Direct     => parameter // immediate mode, use value directly
+      case RelMemAddr => memory.read((relativeBase + parameter.toInt))
+    }
   }
 }
 
@@ -91,6 +102,7 @@ case class Instruction(
         parameter,
         paramModes.get(i).getOrElse(ParamMode.MemAddr),
         memory,
+        i >= parameters.size - opCode.outputParams,
         relativeBase
       )
     }
@@ -125,33 +137,21 @@ def runInstruction(
   val paramValues = instruction.parameterValues(memory, relativeBase(0))
   instruction.opCode match {
     case Add => {
-      val targetAddress = instruction.paramModes(2) match {
-        case MemAddr    => instruction.parameters(2).toInt
-        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
-      }
       memory.write(
-        targetAddress,
+        paramValues(2).toInt,
         paramValues(0) + paramValues(1)
       )
       None
     }
     case Mult => {
-      val targetAddress = instruction.paramModes(2) match {
-        case MemAddr    => instruction.parameters(2).toInt
-        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
-      }
       memory.write(
-        targetAddress,
+        paramValues(2).toInt,
         paramValues(0) * paramValues(1)
       )
       None
     }
     case Input => {
-      val targetAddress = instruction.paramModes(0) match {
-        case MemAddr    => instruction.parameters(0).toInt
-        case RelMemAddr => relativeBase(0) + instruction.parameters(0).toInt
-      }
-      memory.write(targetAddress, inputBuffer.dequeue())
+      memory.write(paramValues(0).toInt, inputBuffer.dequeue())
       None
     }
     case Output => {
@@ -177,12 +177,8 @@ def runInstruction(
       }
     }
     case LessThan => {
-      val targetAddress = instruction.paramModes(2) match {
-        case MemAddr    => instruction.parameters(2).toInt
-        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
-      }
       memory.write(
-        targetAddress,
+        paramValues(2).toInt,
         if (paramValues(0) < paramValues(1)) {
           1
         } else {
@@ -192,12 +188,8 @@ def runInstruction(
       None
     }
     case Equals => {
-      val targetAddress = instruction.paramModes(2) match {
-        case MemAddr    => instruction.parameters(2).toInt
-        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
-      }
       memory.write(
-        targetAddress,
+        paramValues(2).toInt,
         if (paramValues(0) == paramValues(1)) {
           1
         } else {
