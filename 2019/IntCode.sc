@@ -46,7 +46,7 @@ class Memory(val memory: ListBuffer[BigInt] = ListBuffer.empty) {
 
   def validateAddress(address: Int): Unit = {
     if (address < 0) {
-      throw new Exception("Address ${address} below 0")
+      throw new Exception(s"Address ${address} below 0")
     }
 
     if (address >= memory.size) {
@@ -79,8 +79,8 @@ def parseInput(rawInput: String): ListBuffer[BigInt] =
 
 case class Instruction(
     opCode: OpCode,
-    paramModes: Map[Int, ParamMode],
-    parameters: List[BigInt]
+    parameters: List[BigInt],
+    paramModes: Map[Int, ParamMode]
 ) {
   def parameterValues(
       memory: Memory,
@@ -125,25 +125,37 @@ def runInstruction(
   val paramValues = instruction.parameterValues(memory, relativeBase(0))
   instruction.opCode match {
     case Add => {
+      val targetAddress = instruction.paramModes(2) match {
+        case MemAddr    => instruction.parameters(2).toInt
+        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
+      }
       memory.write(
-        instruction.parameters(2).toInt,
+        targetAddress,
         paramValues(0) + paramValues(1)
       )
       None
     }
     case Mult => {
+      val targetAddress = instruction.paramModes(2) match {
+        case MemAddr    => instruction.parameters(2).toInt
+        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
+      }
       memory.write(
-        (instruction.parameters(2).toInt),
+        targetAddress,
         paramValues(0) * paramValues(1)
       )
       None
     }
     case Input => {
-      memory.write(instruction.parameters(0).toInt, inputBuffer.dequeue())
+      val targetAddress = instruction.paramModes(0) match {
+        case MemAddr    => instruction.parameters(0).toInt
+        case RelMemAddr => relativeBase(0) + instruction.parameters(0).toInt
+      }
+      memory.write(targetAddress, inputBuffer.dequeue())
       None
     }
     case Output => {
-      //println(s"Outputting ${paramValues(0)}")
+      // println(s"Outputting ${paramValues(0)}")
       outputBuffer += paramValues(0)
       None
     }
@@ -165,8 +177,12 @@ def runInstruction(
       }
     }
     case LessThan => {
+      val targetAddress = instruction.paramModes(2) match {
+        case MemAddr    => instruction.parameters(2).toInt
+        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
+      }
       memory.write(
-        instruction.parameters(2).toInt,
+        targetAddress,
         if (paramValues(0) < paramValues(1)) {
           1
         } else {
@@ -176,8 +192,12 @@ def runInstruction(
       None
     }
     case Equals => {
+      val targetAddress = instruction.paramModes(2) match {
+        case MemAddr    => instruction.parameters(2).toInt
+        case RelMemAddr => relativeBase(0) + instruction.parameters(2).toInt
+      }
       memory.write(
-        instruction.parameters(2).toInt,
+        targetAddress,
         if (paramValues(0) == paramValues(1)) {
           1
         } else {
@@ -206,9 +226,8 @@ def runProgram(
     // parse next instruction
     val instruction =
       parseInstruction(position, memory)
-    // println(
-    //   s"Running ${instruction} || base ${relativeBase.head} || ${memory.memory}"
-    // )
+    //println(s"${memory.memory.take(20)}")
+    //println(s"Running ${instruction} || base ${relativeBase.head}")
     val maybeJump =
       runInstruction(
         instruction,

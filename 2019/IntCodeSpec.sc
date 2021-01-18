@@ -84,15 +84,4 @@ class Spec extends AnyFlatSpec {
   }
 }
 
-class Spec2 extends AnyFlatSpec {
-
-  "day 9 test case 1" should "make a copy of itself as output" in {
-    val program = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99"
-    val output = Queue[BigInt]()
-    runProgram(program, outputBuffer = output)
-    output.mkString(",") should be(program)
-  }
-
-}
-
-(new Spec2()).execute()
+(new Spec()).execute()
