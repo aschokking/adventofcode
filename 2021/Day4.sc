@@ -25,6 +25,8 @@ val rawInput = Util.inputForDay(4)
 
 type Board = List[List[Int]]
 
+val MARK = -1
+
 def parseInput(input: List[String]) = {
     val numbers = input.head.split(",").map(_.toInt)
 
@@ -47,7 +49,7 @@ def parseBoard(input: List[String], startLine: Int): Board = {
 def markBoards(boards: List[Board], number: Int): List[Board] = {
     boards.map(_.map(_.map(entry => {
         if(entry == number) {
-            -1
+            MARK
         } else {
             entry
         }
@@ -67,12 +69,12 @@ def part1(input: List[String]) = {
         winningBoard.isDefined
     })
 
-    winningBoard.head.map(_.filter(_ != -1).sum).sum * finalNumber.head
+    winningBoard.head.map(_.filter(_ != MARK).sum).sum * finalNumber.head
 }
 
 def tryFindWinners(boards: List[Board]) = {
     boards.filter(
-        board => board.map(_.max).min == -1 || board.transpose.map(_.max).min == -1
+        board => board.map(_.max).min == MARK || board.transpose.map(_.max).min == MARK
     )
 }
 
@@ -91,13 +93,13 @@ def part2(input: List[String]) = {
         } else {
             // remove any winning boards
             boards = boards.filterNot(
-                board => board.map(_.max).min == -1 || board.transpose.map(_.max).min == -1
+                board => board.map(_.max).min == MARK || board.transpose.map(_.max).min == MARK
             )
             false
         }
     })
 
-    boards.head.map(_.filter(_ != -1).sum).sum * finalNumber.head
+    boards.head.map(_.filter(_ != MARK).sum).sum * finalNumber.head
 }
 
 assert (part2(testInput) == 1924)
