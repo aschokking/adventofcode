@@ -9,12 +9,12 @@ def parseInput(input: List[String]) = {
     input.head.split(",").map(_.toInt).toList
 }
 
-def part1(input: List[String]) = {
+def part1(input: List[String], days: Int) = {
     val startTimings = parseInput(input)
     // collect how many of each timing their are
-    var timingCounts: Map[Int, Int] = startTimings.groupBy(identity).mapValues(_.size).toMap
-    for(i <- 0 until 80) {
-        var newFishes = 0
+    var timingCounts: Map[Int, BigInt] = startTimings.groupBy(identity).mapValues(_.size).mapValues(int => BigInt(int)).toMap
+    for(i <- 0 until days) {
+        var newFishes: BigInt = 0
         timingCounts = timingCounts.toList.map { case (key, count) => {
             key match {
                 case 0 => {
@@ -32,5 +32,9 @@ def part1(input: List[String]) = {
     result
 }
 
-assert(part1(testInput) == 5934)
-println(part1(rawInput))
+assert(part1(testInput, 80) == 5934)
+println(part1(rawInput, 80))
+
+// part 2 
+assert(part1(testInput, 256) == BigInt("26984457539"))
+println(part1(rawInput, 256))
