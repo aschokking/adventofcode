@@ -1,3 +1,5 @@
+// Ammonite 2.3.8, Scala 2.13.4
+
 import $ivy.`com.beachape::enumeratum:1.6.1`
 import $ivy.`org.scalatest::scalatest:3.2.2`
 import $file.Util
@@ -58,6 +60,7 @@ case class Instruction(
 def parseInstruction(values: List[Int]): Instruction = {
   val instructionCode = values.head
   val opCode = OpCode.withValue(instructionCode % 100)
+  op
   Instruction(
     opCode = opCode,
     paramModes = (0 to 2).map { position =>

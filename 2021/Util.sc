@@ -5,3 +5,7 @@ import scala.io.Source
 def inputForDay(day: Int): List[String] = {
     Source.fromFile(s"input/${day}.txt").getLines.toList
 }
+
+def testInputForDay(day: Int): List[String] = {
+    Source.fromFile(s"input/${day}_test.txt").getLines.toList
+}

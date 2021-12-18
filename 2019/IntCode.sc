@@ -155,7 +155,7 @@ def runInstruction(
       None
     }
     case Output => {
-      // println(s"Outputting ${paramValues(0)}")
+      //println(s"Outputting ${paramValues(0)}")
       outputBuffer += paramValues(0)
       None
     }
